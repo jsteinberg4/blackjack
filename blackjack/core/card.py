@@ -8,20 +8,11 @@ __all__ = [
 ]
 
 from dataclasses import dataclass, field
-from enum import Enum, auto, IntEnum
+from enum import Enum, auto
 from functools import partialmethod
 from typing import Any
 
-
-class SimpleName(Enum):
-    def __name_str(self) -> str:
-        return self.name.capitalize()
-
-    def __repr__(self) -> str:
-        return self.__name_str()
-
-    def __str__(self) -> str:
-        return self.__name_str()
+import aenum
 
 
 class Action(Enum):
@@ -30,22 +21,26 @@ class Action(Enum):
 
     def _str(self):
         return self.name
-
     __str__ = partialmethod(_str)
     __repr__ = partialmethod(_str)
 
 
-class Suit(SimpleName):
+class Suit(Enum):
     CLUBS = auto()
     SPADES = auto()
     HEARTS = auto()
     DIAMONDS = auto()
 
+    def __name_str(self) -> str:
+        return self.name.capitalize()
+    __repr__ = partialmethod(__name_str)
+    __str__ = partialmethod(__name_str)
 
-class CardValue(SimpleName, IntEnum):
-    # NOTE :: Inherits from SimpleName **first**. Any methods defined in SimpleName will
-    #         be discovered and used first.
-    ACE = 11
+
+class CardValue(aenum.IntEnum):
+    # https://stackoverflow.com/questions/31537316/python-enums-with-duplicate-values
+    _settings_ = aenum.NoAlias
+
     TWO = 2
     THREE = 3
     FOUR = 4
@@ -55,9 +50,17 @@ class CardValue(SimpleName, IntEnum):
     EIGHT = 8
     NINE = 9
     TEN = 10
-    JACK = 11
-    QUEEN = 12
-    KING = 13
+    JACK = 10
+    QUEEN = 10
+    KING = 10
+    ACE = 11
+
+    def __name_str(self) -> str:
+        return self.name.capitalize()
+
+    __repr__ = partialmethod(__name_str)
+    __str__ = partialmethod(__name_str)
+
 
 
 @dataclass(frozen=True, order=True, slots=True)
@@ -69,14 +72,18 @@ class Card:
     value: CardValue = field(compare=True)
     suit: Suit = field(compare=False)
 
-    def __init__(self, value: int, suit: Suit):
-        object.__setattr__(self, "value", CardValue(value))
+    def __init__(self, value: int | CardValue, suit: Suit):
+        object.__setattr__(self, "value", CardValue(value) if isinstance(value, int) else value)
         object.__setattr__(self, "suit", suit)
 
     @classmethod
     def full_suit(cls, suit: Suit) -> list[Card]:
         """Creates an ordered list of all cards for the given suit"""
         return [Card(v, suit) for v in CardValue]
+
+    def is_face(self) -> bool:
+        """Returns true if this card is a Face card, False otherwise"""
+        return self.value in {CardValue.JACK, CardValue.QUEEN, CardValue.KING}
 
     def __name_str(self) -> str:
         return f"{self.value} of {self.suit}"

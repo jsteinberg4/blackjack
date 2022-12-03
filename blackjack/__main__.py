@@ -1,3 +1,7 @@
+"""
+Main BlackJack module. Defines the CLI for running the game.
+"""
+
 import sys
 from datetime import datetime
 
@@ -6,7 +10,8 @@ from tqdm import tqdm
 from blackjack.core.blackjack import BlackJack
 
 
-def info() -> None:
+def info() -> None:  # TODO
+    """Prints the usage instructions"""
     usage = (
         "Blackjack\n"
         "Usage: ..."
@@ -15,6 +20,7 @@ def info() -> None:
 
 
 def sample(game: BlackJack, n_samples: int = 10, sample_size: int = 100, iters: int = 10):
+    """Runs performance testing for a given game"""
     setattr(game, '_verbose', False)
 
     start = datetime.now()
@@ -37,6 +43,7 @@ def sample(game: BlackJack, n_samples: int = 10, sample_size: int = 100, iters: 
 
 
 def run_default():
+    """Runs a game with the default parameters"""
     BlackJack(player='user').play(endless=True)
 
 
@@ -55,8 +62,8 @@ if __name__ == '__main__':
             samples = 100  # TODO -- samples, rounds should be CLI params
             rounds = 10_000
             iterations = 2
-            player = ...  # TODO -- Param for player agent
+            player = 'random'  # TODO -- Param for player agent
             dealer = ...  # TODO -- Param for dealer agent
-            sample(BlackJack(), n_samples=samples, sample_size=rounds, iters=iterations)
-        else: # TODO -- Other params
+            sample(BlackJack(player=player), n_samples=samples, sample_size=rounds, iters=iterations)
+        else:  # TODO -- Other params
             BlackJack().play(10)

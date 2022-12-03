@@ -1,6 +1,7 @@
+from blackjack import utils
 from blackjack.core.card import Action
 from blackjack.core.gamestate import GameState
-from blackjack.core.player import Player
+from blackjack.agents.player import Player
 
 
 class Dealer(Player):
@@ -29,5 +30,15 @@ class Dealer(Player):
 
             return "Stand"
     """
+
     def pick_action(self, game_state: GameState) -> Action:
-        pass
+        """Selects an action using casino rules."""
+        hand = game_state.dealer
+        act: Action = ...
+
+        if utils.hand_value(hand) >= 17:
+            act = Action.STAND
+        else:
+            act = Action.HIT
+
+        return act

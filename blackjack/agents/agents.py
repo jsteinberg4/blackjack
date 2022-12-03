@@ -2,7 +2,7 @@ import random
 
 from blackjack.core import card
 from blackjack.core.gamestate import GameState
-from blackjack.core.player import Player
+from blackjack.agents.player import Player
 
 
 class UserPlayer(Player):

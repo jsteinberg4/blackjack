@@ -1,0 +1,2 @@
+BLACKJACK = 21
+

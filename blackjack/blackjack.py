@@ -23,6 +23,11 @@ class Blackjack:
     __DEFAULT_PLAYER = "user"
     __DEFAULT_DEALER = "casino"
 
+    @staticmethod
+    def agent_types() -> list[str]:
+        """Get a list of all permitted agents. Mostly exists for CLI options."""
+        return Blackjack.__AGENTS.keys()
+
     @classmethod
     def __agent(cls, a: str, default: str = "random") -> Callable[[bool], Agent]:
         """Gets the appropriate agent type"""
@@ -42,12 +47,30 @@ class Blackjack:
         self._verbose = verbose
 
         # Dealer Vars
-        self._dealer = self.__agent(dealer, default=self.__DEFAULT_DEALER)(is_player=False)
+        self._dealer = self.__agent(dealer, default=self.__DEFAULT_DEALER)(
+            is_player=False
+        )
         self._dealer_hand = []
-        self._hide_dealer = True
 
         # Player vars
-        self._player = self.__agent(player, default=self.__DEFAULT_PLAYER)(is_player=True)
+        self._player = self.__agent(player, default=self.__DEFAULT_PLAYER)(
+            is_player=True
+        )
+        self._player_hand = []
+
+        # Game Settings
+        self._hide_dealer = True
+        self._split_hands = False
+        self._surrender = False
+        self._multiplier = 1.0  # Score multiplier for doubling down, surrendering
+
+    def _reset_hand(self):
+        """Reset between rounds"""
+        self._hide_dealer = True
+        self._multiplier = 1.0
+        self._surrender = False
+        self._split_hands = False
+        self._dealer_hand = []
         self._player_hand = []
 
     @property
@@ -55,12 +78,7 @@ class Blackjack:
         """Score of the most recently completed/running game"""
         return self._score
 
-    def _clear_hands(self) -> None:
-        self._dealer_hand = []
-        self._player_hand = []
-
     def _init_hands(self) -> None:
-        self._clear_hands()
         for x in range(4):
             if x % 2 == 0:
                 self._dealer_hand.append(next(self._deck))
@@ -98,7 +116,7 @@ class Blackjack:
         """
 
         def runner():
-            self._hide_dealer = True
+            self._reset_hand()
             self._score += self._next_round()
 
             if self._verbose:
@@ -117,12 +135,16 @@ class Blackjack:
     def _score_hands(self) -> int:
         """Score the player/dealer hands
 
-        Score:
+        Score (multiply by self._multiplier):
         +1.5 -- Player gets blackjack (Ace + Face card)
         +1 -- Player Wins
         +0 -- Push (draw)
+        -0.5 -- Player Surrender
         -1 -- Dealer Wins
         """
+        if self._surrender:
+            return -0.5
+
         player_sum = utils.hand_value(self._player_hand)
         dealer_sum = utils.hand_value(self._dealer_hand)
         player_bust = player_sum > 21
@@ -150,7 +172,7 @@ class Blackjack:
             case True, True:  # Both bust, push
                 score = 0
 
-        return score
+        return score * self._multiplier
 
     def _act_or_stand(self, hand: list[Card], action: Action) -> bool:
         """return True if player chose to Stand, False otherwise"""
@@ -159,6 +181,16 @@ class Blackjack:
                 return True
             case Action.HIT:
                 hand.append(next(self._deck))
+            case Action.SURRENDER:
+                self._surrender = True
+                return True
+            case Action.DOUBLE_DOWN:
+                # TODO -- Double score?
+                self._multiplier = 2
+                hand.append(next(self._deck))
+            case Action.SPLIT:
+                # TODO -- Split hand?
+                self._split_hands = True
             case _:
                 raise ValueError("Invalid action: ", action)
         return False

@@ -51,11 +51,24 @@ class GameState:
         """Get current score"""
         return self._score
 
-    def actions(self, agent: bool) -> list[Action]:
+    def actions(self, is_player: bool) -> list[Action]:
         """List of legal actions for the given agent"""
-        # TODO -- Use agent ID to check if some actions are illegal?
         # Note -- Players can technically hit at any value
-        return [Action.HIT, Action.STAND]
+        legal_actions = [Action.HIT, Action.STAND]
+        hand = self.agent_hand(is_player)
+
+        # -- Double Down: only on first hit
+        # -- Split: If first hit AND hand contains 2 of the same card
+        if len(hand) == 2:
+            legal_actions.append(Action.DOUBLE_DOWN)
+            if hand[0].value is hand[1].value:
+                legal_actions.append(Action.SPLIT)
+
+        # -- Surrender: Players can forfeit for a slightly less negative score
+        if is_player:
+            legal_actions.append(Action.SURRENDER)
+
+        return legal_actions
 
     def _display(self) -> str:
         """String representation of the game"""

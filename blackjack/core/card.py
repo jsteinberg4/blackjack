@@ -24,10 +24,6 @@ class Card:
         """Creates an ordered list of all cards for the given suit"""
         return [Card(v, suit) for v in CardValue]
 
-    def is_face(self) -> bool:
-        """Returns true if this card is a Face card, False otherwise"""
-        return self.value in {CardValue.JACK, CardValue.QUEEN, CardValue.KING}
-
     def __name_str(self) -> str:
         return f"{self.value} of {self.suit}"
 

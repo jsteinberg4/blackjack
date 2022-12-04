@@ -8,15 +8,24 @@ class UserAgent(Agent):
     """
 
     def pick_action(self, game_state: GameState, *args, **kwargs):
-        actions = [str(a).lower() for a in game_state.actions(agent=self._is_player)]
-        actions_str = ", ".join(actions)
+        legal_actions = game_state.actions(is_player=self._is_player)
+        action: Action = None
 
         print(game_state)
-        while (
-            choice := input("Select one of [" + actions_str + "]: ").lower()
-        ) not in actions:
-            print(choice, choice not in actions)
-            print(actions)
-            print("Please enter one of the given values.")
+        print("Select one of the following: ")
+        for opt, act in enumerate(legal_actions):
+            print(opt + 1, ") ", act, sep="")
 
-        return Action(choice)
+        # Repeatedly prompt until a valid option is selected
+        while action is None:
+            choice = input("Enter the option number: ")
+            try:
+                choice_num = int(choice) - 1
+                if choice_num in range(len(legal_actions)):
+                    action = legal_actions[choice_num]
+                else:
+                    print("Invalid option. Choice must be in range: [1...", len(legal_actions), "].", sep="")
+            except ValueError:
+                continue
+
+        return action

@@ -38,10 +38,10 @@ def hand_value(hand: list[Card]) -> int:
 def blackjack_hand(hand: list[Card]) -> bool:
     """Checks for a blackjack hand.
 
-    A blackjack hand consists of 2 cards, which are an Ace and a Face card (Jack/Queen/King).
+    A blackjack hand consists of 2 cards, which are an Ace and a 10-value card (Ten/Jack/Queen/King).
     """
     return (
-        len(hand) == 2  # Max hand length
-        and any(map(Card.is_face, hand))  # One of the cards is a Face
-        and any(map(lambda c: c.value is CardValue.ACE, hand))  # One card is an Ace
+        len(hand) == 2
+        and (hand[0].value == 10 or hand[1].value == 10)
+        and (hand[0].value is CardValue.ACE or hand[1].value is CardValue.ACE)
     )

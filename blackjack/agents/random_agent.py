@@ -10,5 +10,5 @@ class RandomAgent(Agent):
     """
 
     def pick_action(self, game_state: GameState, *args, **kwargs):
-        actions = game_state.actions(agent=self._is_player)
+        actions = game_state.actions(is_player=self._is_player)
         return random.choice(actions)

@@ -1,5 +1,5 @@
 # blackjack
-Blackjack game implementation with AI agents.
+Blackjack game implementation with AI agents. Requires Python>=3.10.
 
 ## Run Instructions
 * Working directory must be the repo root, otherwise you will get "'blackjack is not a module' errors".

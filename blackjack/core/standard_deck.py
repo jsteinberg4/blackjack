@@ -1,9 +1,9 @@
-import collections.abc as abc
+from collections import abc
 from functools import partialmethod
 from pprint import pformat
 import random
 
-from blackjack.core.card import Card, Suit
+from blackjack.core import Card, Suit
 
 
 class StandardDeck(abc.Sequence):

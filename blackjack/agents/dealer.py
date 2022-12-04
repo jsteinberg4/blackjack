@@ -1,10 +1,9 @@
 from blackjack import utils
-from blackjack.core.card import Action
-from blackjack.core.gamestate import GameState
-from blackjack.agents.player import Player
+from blackjack.agents import Agent
+from blackjack.core import Action, GameState
 
 
-class Dealer(Player):
+class Dealer(Agent):
     """
     When the dealer has served every player, the dealers face-down card is turned up.
     If the total is 17 or more, it must stand. If the total is 16 or under, they must take a card.
@@ -31,10 +30,10 @@ class Dealer(Player):
             return "Stand"
     """
 
-    def pick_action(self, game_state: GameState) -> Action:
+    def pick_action(self, game_state: GameState, *args, **kwargs) -> Action:
         """Selects an action using casino rules."""
-        hand = game_state.dealer
         act: Action = ...
+        hand = game_state.agent_hand(self._is_player)
 
         if utils.hand_value(hand) >= 17:
             act = Action.STAND

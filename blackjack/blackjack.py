@@ -3,29 +3,27 @@ from __future__ import annotations
 from typing import Callable, Iterator
 
 from blackjack import utils
-from blackjack.agents.agents import UserPlayer, RandomPlayer
-from blackjack.core.card import Card, Action
-from blackjack.agents.dealer import Dealer
-from blackjack.core.gamestate import GameState
-from blackjack.agents.player import Player
-from blackjack.core.standard_deck import StandardDeck
+from blackjack.agents import Agent, Dealer, RandomAgent, UserAgent
+from blackjack.core import Action, Card, GameState, StandardDeck
 
 
-class BlackJack:
+class Blackjack:
     """
     Represents a running game of blackjack
     """
 
-    __PLAYERS = {"user": UserPlayer, "random": RandomPlayer}
-    __DEALERS = {"casino": Dealer}
+    __AGENTS = {
+        "user": UserAgent,
+        "random": RandomAgent,
+        "casino": Dealer,
+    }
+    __DEFAULT_PLAYER = "user"
+    __DEFAULT_DEALER = "casino"
 
     @classmethod
-    def __player(cls, p: str, default: str = "user") -> Callable[[], Player]:
-        return cls.__PLAYERS.get(p, cls.__PLAYERS[default])
-
-    @classmethod
-    def __dealer(cls, d: str, default: str = "casino") -> Callable[[], Dealer]:
-        return cls.__DEALERS.get(d, cls.__DEALERS[default])
+    def __agent(cls, a: str, default: str = "random") -> Callable[[bool], Agent]:
+        """Gets the appropriate agent type"""
+        return cls.__AGENTS.get(a, cls.__AGENTS[default])
 
     def __init__(
         self,
@@ -37,13 +35,17 @@ class BlackJack:
     ):
         # TODO -- Docstring
         self._deck = self._make_endless_deck(StandardDeck())
-        self._dealer = self.__dealer(dealer)()  # Dealer vars
-        self._dealer_hand = []
-        self._hide_dealer = True
-        self._player = self.__player(player)()  # Player vars
-        self._player_hand = []
         self._score = 0
         self._verbose = verbose
+
+        # Dealer Vars
+        self._dealer = self.__agent(dealer, default=self.__DEFAULT_DEALER)(is_player=False)
+        self._dealer_hand = []
+        self._hide_dealer = True
+
+        # Player vars
+        self._player = self.__agent(player, default=self.__DEFAULT_PLAYER)(is_player=True)
+        self._player_hand = []
 
     @property
     def score(self) -> int:
@@ -124,27 +126,20 @@ class BlackJack:
         dealer_bust = dealer_sum > 21
         score = 0
 
+        # Score based on who bust
         match (player_bust, dealer_bust):
             case False, False:  # Neither bust, closest to 21 wins
                 player_dist = abs(21 - player_sum)
                 dealer_dist = abs(21 - dealer_sum)
 
-                # 1) Somebody could have blackjack
-                # 2) Players have equal hands
-                # 3) Nobody has blackjack. Whoever is closer to 21 wins
+                # See who scored closest to 21
                 if player_dist == dealer_dist:  # Equal hands always push
                     score = 0
-
-                # Neither player has bust. Players do not have equal hands
-                elif player_dist == 0:  # Player got blackjack
+                elif dealer_dist < player_dist:  # Dealer won the hand
+                    score = -1
+                else:  # Player won the hand
+                    # Bonus points for blackjack
                     score = 1.5 if utils.blackjack_hand(self._player_hand) else 1
-
-                if player_dist == dealer_dist:  # 2
-                    score = 0
-                elif player_dist == 0 or dealer_dist == 0:  # 1
-
-                else:  # 3
-                    score = +1 if player_dist < dealer_dist else -1
             case True, False:  # Only player bust, dealer wins
                 score = -1
             case False, True:  # Only dealer bust, player wins
@@ -163,6 +158,7 @@ class BlackJack:
                 hand.append(next(self._deck))
             case _:
                 raise ValueError("Invalid action: ", action)
+        return False
 
     def _next_round(self) -> int:
         # Start the round by dealing 2 cards to dealer & player, alternating
@@ -178,7 +174,7 @@ class BlackJack:
         # If player did not "Bust", then the dealer plays
         self._hide_dealer = False
         stand = False
-        if utils.hand_value(self._player_hand) < utils.BLACKJACK:
+        if utils.hand_value(self._player_hand) <= utils.BLACKJACK:
             #   Until dealer stands or busts:
             while not stand and utils.hand_value(self._dealer_hand) < utils.BLACKJACK:
                 # Let dealer choose legal move

@@ -1,4 +1,4 @@
-from blackjack.core.card import Card, CardValue
+from blackjack.core import Card, CardValue
 
 BLACKJACK = 21
 
@@ -41,7 +41,7 @@ def blackjack_hand(hand: list[Card]) -> bool:
     A blackjack hand consists of 2 cards, which are an Ace and a Face card (Jack/Queen/King).
     """
     return (
-            len(hand) == 2  # Max hand length
-            and any(map(Card.is_face, hand))  # One of the cards is a Face
-            and any(map(lambda c: c.value is CardValue.ACE, hand))  # One card is an Ace
+        len(hand) == 2  # Max hand length
+        and any(map(Card.is_face, hand))  # One of the cards is a Face
+        and any(map(lambda c: c.value is CardValue.ACE, hand))  # One card is an Ace
     )

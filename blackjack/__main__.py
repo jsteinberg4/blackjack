@@ -1,5 +1,5 @@
 """
-Main BlackJack module. Defines the CLI for running the game.
+Main Blackjack module. Defines the CLI for running the game.
 """
 
 import sys
@@ -7,7 +7,7 @@ from datetime import datetime
 
 from tqdm import tqdm
 
-from blackjack.core.blackjack import BlackJack
+from blackjack import Blackjack
 
 
 def info() -> None:  # TODO
@@ -19,32 +19,36 @@ def info() -> None:  # TODO
     print(usage)
 
 
-def sample(game: BlackJack, n_samples: int = 10, sample_size: int = 100, iters: int = 10):
+def sample(game: Blackjack, n_games: int = 1, sample_size: int = 100):
     """Runs performance testing for a given game"""
     setattr(game, '_verbose', False)
 
+    # total_wins = 0
+    wins = []
     start = datetime.now()
-    sample_data = []
-    for __ in range(iters):
-        scores = []
-        for _ in tqdm(range(n_samples)):
-            game.play(sample_size)
-            scores.append(game.score)
-        sample_data.append(sum([1 if score > 0 else 0 for score in scores]) / n_samples)
+    for _ in range(10):
+        total_wins = 0
+        for __ in tqdm(range(sample_size)):
+            score = game.play(rounds=n_games)
+            if score > 0:
+                total_wins += 1
+        wins.append(total_wins)
     end = datetime.now()
+    # win_rate = total_wins / sample_size
+    win_rate = sum([win / sample_size for win in wins]) / 10
 
     print('-'*50)
     print("Sample Distribution:")
-    print("Sampling Rounds: ", iters)
-    print("Num Samples: ", samples)
-    print("Num Games per Sample: ", sample_size)
-    print("Sample mean: ", sum(sample_data) / samples)
+    print("Number of Samples: ", sample_size)
+    print("Number of Games per Sample: ", n_games)
+    # print("Total Games won: ", total_wins)
+    print("Sample mean: ", win_rate)
     print("Time elapsed (seconds): ", (end - start).seconds)
 
 
 def run_default():
     """Runs a game with the default parameters"""
-    BlackJack(player='user').play(endless=True)
+    Blackjack(player='user').play(endless=True)
 
 
 if __name__ == '__main__':
@@ -58,12 +62,16 @@ if __name__ == '__main__':
         run_default()
     else:
         # TODO -- Parameters for sampling
-        if 'sample' in sys.argv:
-            samples = 100  # TODO -- samples, rounds should be CLI params
-            rounds = 10_000
-            iterations = 2
-            player = 'random'  # TODO -- Param for player agent
-            dealer = ...  # TODO -- Param for dealer agent
-            sample(BlackJack(player=player), n_samples=samples, sample_size=rounds, iters=iterations)
+        if 'sample' == sys.argv[1]:
+            # TODO -- should be CLI params
+            sample_size = 1_000
+            n_games = 10
+            player = 'random'
+            dealer = 'random'
+            sample(Blackjack(player=player, dealer=dealer), n_games=n_games, sample_size=sample_size)
+        elif "play" == sys.argv[1]:
+            player = 'user'  # TODO -- CLI params
+            dealer = 'casino'
+            Blackjack(player=player, dealer=dealer).play(endless=True)
         else:  # TODO -- Other params
-            BlackJack().play(10)
+            Blackjack().play(10)

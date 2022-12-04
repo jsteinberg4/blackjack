@@ -23,26 +23,22 @@ def sample(game: Blackjack, n_games: int = 1, sample_size: int = 100):
     """Runs performance testing for a given game"""
     setattr(game, '_verbose', False)
 
-    # total_wins = 0
-    wins = []
+    total_wins = 0
     start = datetime.now()
-    for _ in range(10):
-        total_wins = 0
-        for __ in tqdm(range(sample_size)):
-            score = game.play(rounds=n_games)
-            if score > 0:
-                total_wins += 1
-        wins.append(total_wins)
+    for __ in tqdm(range(sample_size)):
+        score = game.play(rounds=n_games)
+        if score > 0:
+            total_wins += 1
     end = datetime.now()
-    # win_rate = total_wins / sample_size
-    win_rate = sum([win / sample_size for win in wins]) / 10
+    win_rate = total_wins / sample_size
+    # win_rate = sum([win / sample_size for win in wins]) / 10
 
     print('-'*50)
     print("Sample Distribution:")
     print("Number of Samples: ", sample_size)
     print("Number of Games per Sample: ", n_games)
-    # print("Total Games won: ", total_wins)
-    print("Sample mean: ", win_rate)
+    print("Total Games won: ", total_wins)
+    print(f"Win Rate: {win_rate: .2%}")
     print("Time elapsed (seconds): ", (end - start).seconds)
 
 
@@ -65,9 +61,9 @@ if __name__ == '__main__':
         if 'sample' == sys.argv[1]:
             # TODO -- should be CLI params
             sample_size = 1_000
-            n_games = 10
-            player = 'random'
-            dealer = 'random'
+            n_games = 500
+            player = 'hit'
+            dealer = 'stand'
             sample(Blackjack(player=player, dealer=dealer), n_games=n_games, sample_size=sample_size)
         elif "play" == sys.argv[1]:
             player = 'user'  # TODO -- CLI params

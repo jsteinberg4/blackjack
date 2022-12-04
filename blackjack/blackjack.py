@@ -1,9 +1,10 @@
 from __future__ import annotations
 
+from functools import partial
 from typing import Callable, Iterator
 
 from blackjack import utils
-from blackjack.agents import Agent, Dealer, RandomAgent, UserAgent
+from blackjack.agents import Agent, Dealer, RandomAgent, UserAgent, SingleActionAgent
 from blackjack.core import Action, Card, GameState, StandardDeck
 
 
@@ -16,6 +17,8 @@ class Blackjack:
         "user": UserAgent,
         "random": RandomAgent,
         "casino": Dealer,
+        "hit": partial(SingleActionAgent, action=Action.HIT),
+        "stand": partial(SingleActionAgent, action=Action.STAND),
     }
     __DEFAULT_PLAYER = "user"
     __DEFAULT_DEALER = "casino"

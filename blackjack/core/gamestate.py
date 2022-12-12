@@ -61,8 +61,8 @@ class GameState:
         # -- Split: If first hit AND hand contains 2 of the same card
         if len(hand) == 2:
             legal_actions.append(Action.DOUBLE_DOWN)
-            if hand[0].value is hand[1].value:
-                legal_actions.append(Action.SPLIT)
+            # if hand[0].value is hand[1].value:
+            #     legal_actions.append(Action.SPLIT)
 
         # -- Surrender: Players can forfeit for a slightly less negative score
         if is_player:

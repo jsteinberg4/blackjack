@@ -5,6 +5,7 @@ from typing import Callable, Iterator
 
 from blackjack import utils
 from blackjack.agents import Agent, Dealer, RandomAgent, UserAgent, SingleActionAgent
+from blackjack.agents.qlearning_agent import QLearningAgent
 from blackjack.core import Action, Card, GameState, StandardDeck
 
 
@@ -19,14 +20,15 @@ class Blackjack:
         "casino": Dealer,
         "hit": partial(SingleActionAgent, action=Action.HIT),
         "stand": partial(SingleActionAgent, action=Action.STAND),
+        "q": QLearningAgent,
     }
     __DEFAULT_PLAYER = "user"
     __DEFAULT_DEALER = "casino"
 
-    @staticmethod
-    def agent_types() -> list[str]:
+    @classmethod
+    def agent_types(cls) -> tuple[str]:
         """Get a list of all permitted agents. Mostly exists for CLI options."""
-        return Blackjack.__AGENTS.keys()
+        return tuple(cls.__AGENTS.keys())
 
     @classmethod
     def __agent(cls, a: str, default: str = "random") -> Callable[[bool], Agent]:
@@ -39,12 +41,20 @@ class Blackjack:
         player: str = None,
         dealer: str = None,
         verbose: bool = True,
+        train_rounds: int = 10_000,
         **kwargs,
     ):
         # TODO -- Docstring
         self._deck = self._make_endless_deck(StandardDeck())
         self._score = 0
         self._verbose = verbose
+        self._train_rounds = train_rounds
+
+        # Game Settings
+        self._hide_dealer = True
+        self._split_hands = False
+        self._surrender = False
+        self._multiplier = 1.0  # Score multiplier for doubling down, surrendering
 
         # Dealer Vars
         self._dealer = self.__agent(dealer, default=self.__DEFAULT_DEALER)(
@@ -57,12 +67,34 @@ class Blackjack:
             is_player=True
         )
         self._player_hand = []
+        if self._player.trainable:
+            self._train(self._player)
 
-        # Game Settings
-        self._hide_dealer = True
-        self._split_hands = False
-        self._surrender = False
-        self._multiplier = 1.0  # Score multiplier for doubling down, surrendering
+        print(self._player._states)
+
+
+
+    def _train(self, player):
+        for _ in range(self._train_rounds):
+            self._init_hands()
+            stand = False
+            while not stand and utils.hand_value(self._player_hand) < utils.BLACKJACK:
+                state = self.state()
+                action = self._player.pick_action(state)
+                stand = self._act_or_stand(self._player_hand, action)
+                next_state = self.state()
+                self._player.observe_transition(state, action, next_state, 21 - utils.hand_value(self._player_hand))
+
+            stand = False
+            self._hide_dealer = False
+            if utils.hand_value(self._player_hand) <= utils.BLACKJACK:
+                #   Until dealer stands or busts:
+                while not stand and utils.hand_value(self._dealer_hand) < utils.BLACKJACK:
+                    # Let dealer choose legal move
+                    action = self._dealer.pick_action(self.state())
+                    stand = self._act_or_stand(self._dealer_hand, action)
+            self._reset_hand()
+
 
     def _reset_hand(self):
         """Reset between rounds"""

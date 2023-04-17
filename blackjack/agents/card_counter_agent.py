@@ -8,7 +8,7 @@ class CardCounterAgent(Agent):
     probabilistic guess about possible successive hands.
     """
 
-    def __init__(self, is_player: bool, num_decks: int = 1, *args, **kwargs):
+    def __init__(self, is_player: bool, *args, num_decks: int = 1, **kwargs):
         super(CardCounterAgent, self).__init__(is_player)
         self._seen: set[Card] = set()
         self._total_cards = 52 * num_decks

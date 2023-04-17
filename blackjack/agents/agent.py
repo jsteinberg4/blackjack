@@ -13,13 +13,24 @@ class Agent(ABC):
                                  (Allows Agents to be used as either the Player or Dealer)
     """
 
-    def __init__(self, is_player: bool, *args, **kwargs):
+    def __init__(self, is_player: bool, trainable: bool = False, *args, **kwargs):
         """
         :param is_player: Required. True for the "Player", False for the "dealer".
         See Agent docstring for more details.
         """
         self._is_player = is_player
+        self._trainable = trainable
+
+    @property
+    def trainable(self) -> bool:
+        """True/False if this agent can be trained"""
+        return self._trainable
 
     @abstractmethod
     def pick_action(self, game_state: GameState, *args, **kwargs):
         pass
+
+    def train(self, game):
+        if self._trainable:
+            raise NotImplementedError("Agent is trainable but has no train method.")
+        return None
